@@ -1,0 +1,21 @@
+# Usamos Node.js en lugar de Nginx
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 1. Copiamos el package.json para instalar dependencias
+# (Asumo que el package.json está en la raíz de frontend)
+COPY package*.json ./
+
+# 2. Instalamos las librerías (Express, cookie-parser, etc.)
+RUN npm install
+
+# 3. Copiamos el código del proxy
+# OJO: Ajusta la ruta si server.js está dentro de una carpeta 'proxy'
+COPY proxy/server.js .
+
+# 4. Exponemos el puerto 3000
+EXPOSE 3000
+
+# 5. Arrancamos el servidor Node
+CMD ["node", "server.js"]
