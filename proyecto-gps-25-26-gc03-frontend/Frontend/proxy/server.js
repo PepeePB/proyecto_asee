@@ -8,7 +8,7 @@ app.use(express.json());
 
 // CORS
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://18.205.26.84:4200");
+    res.header("Access-Control-Allow-Origin", "http://18.235.28.236:4200");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 });
 // PROXY ROUTE
 app.all(/^\/api\/.*/, async (req, res) => {
-    const apiUrl = 'http://18.205.26.84:8080' + req.url.replace('/api', '');
+    const apiUrl = 'http://18.235.28.236:8080' + req.url.replace('/api', '');
 
     try {
         const body = ['POST', 'PUT', 'PATCH', 'GET'].includes(req.method)
@@ -61,4 +61,4 @@ app.all(/^\/api\/.*/, async (req, res) => {
 });
 
 
-app.listen(PORT, () => console.log(`Proxy corriendo en http://18.205.26.84:${PORT}`));
+app.listen(PORT, () => console.log(`Proxy corriendo en http://18.235.28.236:${PORT}`));

@@ -7,7 +7,7 @@ const PORT = 3000;
 // const fetch = require('node-fetch');
 
 // Configuración backend
-const BACKEND_BASE = process.env.BACKEND_URL || 'http://18.205.26.84:8080';
+const BACKEND_BASE = process.env.BACKEND_URL || 'http://18.235.28.236:8080';
 const VALIDATE_PATH = '/api/verified';
 
 app.use(cookieParser());
@@ -31,7 +31,7 @@ app.post('/access/logout', (req, res) => {
 
 // ---------- CORS ----------
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://18.205.26.84:4200");
+    res.header("Access-Control-Allow-Origin", "http://18.235.28.236:4200");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
@@ -176,4 +176,4 @@ app.all(/^\/proxy\/.*/, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Proxy corriendo en http://18.205.26.84:${PORT}`));
+app.listen(PORT, () => console.log(`Proxy corriendo en http://18.235.28.236:${PORT}`));

@@ -15,7 +15,7 @@ loginBtn?.addEventListener('click', async () => {
         // Petición al API Gateway de login
         console.log(JSON.stringify({ username, password }));
 
-        const res = await fetch('http://18.205.26.84:3000/api/access/login', {
+        const res = await fetch('http://18.235.28.236:3000/api/access/login', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
             headers: {
