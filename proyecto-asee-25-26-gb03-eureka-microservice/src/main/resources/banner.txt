@@ -1,0 +1,11 @@
+,------.                      ,--.
+|  .---',--.,--.,--.--. ,---. |  |,-. ,--,--.
+|  `--, |  ||  ||  .--'| .-. :|     /' ,-.  |
+|  `---.'  ''  '|  |   \   --.|  \  \\ '-'  |
+`------' `----' `--'    `----'`--'`--'`--`--'
+
+${application.title} ${application.version}
+Ejecucion en el puerto: ${server.port}
+
+Powered by Samuel Soto Paredes © 2025
+AOS - Escuela Politecnica - UEx
