@@ -23,7 +23,7 @@ if (artistForm) {
         artistStatus.style.display = "block";
 
         const btn = document.querySelector('.action-btn');
-        if(btn) {
+        if (btn) {
             btn.disabled = true;
             btn.style.backgroundColor = '#555';
         }
@@ -51,7 +51,7 @@ if (artistForm) {
 
         try {
             // URL: /api/artists/create-form/{userId}
-            const response = await fetch(`http://localhost:3000/proxy/api/artists/create-form/${userId}`, {
+            const response = await fetch(`http://3.236.45.145:3000/proxy/api/artists/create-form/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

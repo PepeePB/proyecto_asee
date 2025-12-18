@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+const API_URL = "http://3.236.45.145:3000/api";
 
 let songs = [];
 let allSongs = [];
@@ -34,22 +34,22 @@ downloadBtn?.addEventListener('click', downloadCurrentSong);
 
 const storedVol = localStorage.getItem('player_volume');
 const initialVolume = storedVol !== null ? clamp(parseFloat(storedVol), 0, 1) : 1;
-if(audio) audio.volume = initialVolume;
-if(volumeSlider) {
+if (audio) audio.volume = initialVolume;
+if (volumeSlider) {
     volumeSlider.value = Math.round(initialVolume * 100);
 }
-if(volumeValue) volumeValue.textContent = `${Math.round(initialVolume * 100)}%`;
+if (volumeValue) volumeValue.textContent = `${Math.round(initialVolume * 100)}%`;
 updateMuteButton();
 
 // Volumen
 volumeSlider?.addEventListener('input', (e) => {
     const pct = Number(e.target.value);
     const v = pct / 100;
-    if(audio) audio.volume = v;
-    if(volumeValue) volumeValue.textContent = `${pct}%`;
+    if (audio) audio.volume = v;
+    if (volumeValue) volumeValue.textContent = `${pct}%`;
     localStorage.setItem('player_volume', v.toString());
 
-    if(muteBtn && v > 0) {
+    if (muteBtn && v > 0) {
         muteBtn.setAttribute('aria-pressed', 'false');
         muteBtn.textContent = '🔊';
     }
@@ -61,25 +61,25 @@ searchBar?.addEventListener('input', e => {
     const filtered = text === "" ? allSongs : allSongs.filter(song =>
         (song.nombre || '').toLowerCase().includes(text)
     );
-    renderSongs(filtered); 
+    renderSongs(filtered);
     // No reiniciamos currentIndex, así la canción actual sigue
 });
 
 // Mute / restore
 muteBtn?.addEventListener('click', () => {
-    if(!audio) return;
-    if(audio.volume === 0) {
+    if (!audio) return;
+    if (audio.volume === 0) {
         const restored = clamp(parseFloat(localStorage.getItem('player_volume') || '1'), 0, 1);
         audio.volume = restored;
-        if(volumeSlider) volumeSlider.value = Math.round(restored * 100);
-        if(volumeValue) volumeValue.textContent = `${Math.round(restored * 100)}%`;
+        if (volumeSlider) volumeSlider.value = Math.round(restored * 100);
+        if (volumeValue) volumeValue.textContent = `${Math.round(restored * 100)}%`;
         muteBtn.setAttribute('aria-pressed', 'false');
         muteBtn.textContent = '🔊';
     } else {
         localStorage.setItem('player_volume', audio.volume.toString());
         audio.volume = 0;
-        if(volumeSlider) volumeSlider.value = 0;
-        if(volumeValue) volumeValue.textContent = '0%';
+        if (volumeSlider) volumeSlider.value = 0;
+        if (volumeValue) volumeValue.textContent = '0%';
         muteBtn.setAttribute('aria-pressed', 'true');
         muteBtn.textContent = '🔈';
     }
@@ -98,10 +98,10 @@ window.addEventListener('keydown', (e) => {
 // Renderizar canciones
 function renderSongs(list) {
     songs = list;
-    if(!listEl) return;
+    if (!listEl) return;
     listEl.innerHTML = "";
 
-    if(songs.length === 0) {
+    if (songs.length === 0) {
         listEl.innerHTML = '<p style="color:gray">No se encontraron canciones.</p>';
         return;
     }
@@ -125,77 +125,77 @@ async function loadSongs() {
         const response = await fetch(`${API_URL}/songs`);
         allSongs = await response.json();
         renderSongs(allSongs);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
-        if(listEl) listEl.innerHTML = '<p style="color:red">Error al cargar canciones.</p>';
+        if (listEl) listEl.innerHTML = '<p style="color:red">Error al cargar canciones.</p>';
     }
 }
 
 // Reproducir canción
 async function playIndex(idx) {
-    if(idx < 0 || idx >= songs.length) return;
+    if (idx < 0 || idx >= songs.length) return;
     const song = songs[idx];
     currentIndex = idx;
     updateControls();
 
-    if(titleEl) titleEl.textContent = song.nombre || 'Sin título';
-    if(artistEl) artistEl.textContent = `Artista ID: ${song.idArtista ?? 'N/A'}`;
-    if(cover) cover.src = song.urlPortada || defaultCover();
-    if(playerSection) playerSection.hidden = false;
+    if (titleEl) titleEl.textContent = song.nombre || 'Sin título';
+    if (artistEl) artistEl.textContent = `Artista ID: ${song.idArtista ?? 'N/A'}`;
+    if (cover) cover.src = song.urlPortada || defaultCover();
+    if (playerSection) playerSection.hidden = false;
 
-    if(currentObjectURL) {
+    if (currentObjectURL) {
         URL.revokeObjectURL(currentObjectURL);
         currentObjectURL = null;
     }
 
     try {
-        if(playerStatus) playerStatus.textContent = 'Descargando audio…';
+        if (playerStatus) playerStatus.textContent = 'Descargando audio…';
         const id = song.idCancion ?? song.id;
-        if(id == null) throw new Error('ID de canción no encontrado');
+        if (id == null) throw new Error('ID de canción no encontrado');
 
         const res = await fetch(`${API_URL}/songs/${id}/stream`);
-        if(!res.ok) throw new Error(`Error en stream: ${res.status}`);
+        if (!res.ok) throw new Error(`Error en stream: ${res.status}`);
         const blob = await res.blob();
         currentObjectURL = URL.createObjectURL(blob);
 
-        if(audio) {
+        if (audio) {
             audio.src = currentObjectURL;
             audio.load();
             const stored = clamp(parseFloat(localStorage.getItem('player_volume') || '1'), 0, 1);
             audio.volume = stored;
-            if(volumeSlider) volumeSlider.value = Math.round(stored * 100);
-            if(volumeValue) volumeValue.textContent = `${Math.round(stored * 100)}%`;
+            if (volumeSlider) volumeSlider.value = Math.round(stored * 100);
+            if (volumeValue) volumeValue.textContent = `${Math.round(stored * 100)}%`;
             updateMuteButton();
 
             const playPromise = audio.play();
-            if(playPromise !== undefined) {
+            if (playPromise !== undefined) {
                 playPromise.then(() => {
-                    if(playerStatus) playerStatus.textContent = 'Reproduciendo';
+                    if (playerStatus) playerStatus.textContent = 'Reproduciendo';
                 }).catch(err => {
                     console.warn('Playback bloqueado:', err);
-                    if(playerStatus) playerStatus.textContent = 'Haz clic en play en el reproductor para iniciar la reproducción.';
+                    if (playerStatus) playerStatus.textContent = 'Haz clic en play en el reproductor para iniciar la reproducción.';
                 });
-            } else if(playerStatus) {
+            } else if (playerStatus) {
                 playerStatus.textContent = 'Listo para reproducir';
             }
         }
-    } catch(err) {
+    } catch (err) {
         console.error(err);
-        if(playerStatus) playerStatus.textContent = 'No se pudo reproducir la canción. Revisa consola y CORS.';
+        if (playerStatus) playerStatus.textContent = 'No se pudo reproducir la canción. Revisa consola y CORS.';
     }
 }
 
 // Descargar canción
 async function downloadCurrentSong() {
-    if(currentIndex < 0) return;
+    if (currentIndex < 0) return;
     const song = songs[currentIndex];
     const id = song.idCancion ?? song.id;
-    if(id == null) return;
+    if (id == null) return;
 
     try {
-        if(playerStatus) playerStatus.textContent = 'Generando descarga…';
+        if (playerStatus) playerStatus.textContent = 'Generando descarga…';
         const res = await fetch(`${API_URL}/songs/${id}/download`);
-        if(!res.ok) throw new Error('Error al descargar: ' + res.status);
+        if (!res.ok) throw new Error('Error al descargar: ' + res.status);
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -206,23 +206,23 @@ async function downloadCurrentSong() {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-        if(playerStatus) playerStatus.textContent = 'Descarga iniciada';
-    } catch(err) {
+        if (playerStatus) playerStatus.textContent = 'Descarga iniciada';
+    } catch (err) {
         console.error(err);
-        if(playerStatus) playerStatus.textContent = 'Error al descargar.';
+        if (playerStatus) playerStatus.textContent = 'Error al descargar.';
     }
 }
 
 // Controles prev/next
 function updateControls() {
-    if(prevBtn) prevBtn.disabled = currentIndex <= 0;
-    if(nextBtn) nextBtn.disabled = currentIndex >= songs.length - 1;
+    if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+    if (nextBtn) nextBtn.disabled = currentIndex >= songs.length - 1;
 }
 
 // Botón mute
 function updateMuteButton() {
-    if(!muteBtn || !audio) return;
-    if(audio.volume === 0) {
+    if (!muteBtn || !audio) return;
+    if (audio.volume === 0) {
         muteBtn.setAttribute('aria-pressed', 'true');
         muteBtn.textContent = '🔈';
     } else {
@@ -233,7 +233,7 @@ function updateMuteButton() {
 
 // Escapar HTML
 function escapeHtml(s) {
-    if(!s) return '';
+    if (!s) return '';
     return s.toString()
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -242,7 +242,7 @@ function escapeHtml(s) {
 
 // Clamp
 function clamp(v, a, b) {
-    if(Number.isNaN(v)) return a;
+    if (Number.isNaN(v)) return a;
     return Math.min(b, Math.max(a, v));
 }
 

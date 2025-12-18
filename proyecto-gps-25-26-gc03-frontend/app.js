@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080";
+const API_URL = "http://3.236.45.145:8080";
 
 let songs = [];
 let allSongs = [];
@@ -28,7 +28,7 @@ const logoutBtn = document.getElementById('logout-btn');
 
 logoutBtn?.addEventListener('click', async () => {
     try {
-        await fetch('http://localhost:3000/proxy/access/logout', {
+        await fetch('http://3.236.45.145:3000/proxy/access/logout', {
             method: 'POST',
             credentials: 'include'
         });
@@ -52,7 +52,7 @@ function defaultCover() {
 function logResponse(resp) {
     console.log("Fetch status:", resp.status, resp.statusText);
     console.log("Headers:");
-    resp.headers.forEach((v,k)=>console.log(k,':',v));
+    resp.headers.forEach((v, k) => console.log(k, ':', v));
 }
 
 // Inicializar controles
@@ -64,23 +64,23 @@ downloadBtn?.addEventListener('click', downloadCurrentSong);
 const storedVol = localStorage.getItem('player_volume');
 const initialVolume = storedVol !== null ? clamp(parseFloat(storedVol), 0, 1) : 1;
 
-if(audio) audio.volume = initialVolume;
-if(volumeSlider) volumeSlider.value = Math.round(initialVolume * 100);
-if(volumeValue) volumeValue.textContent = `${Math.round(initialVolume * 100)}%`;
+if (audio) audio.volume = initialVolume;
+if (volumeSlider) volumeSlider.value = Math.round(initialVolume * 100);
+if (volumeValue) volumeValue.textContent = `${Math.round(initialVolume * 100)}%`;
 
 updateMuteButton();
 
 volumeSlider?.addEventListener('input', (e) => {
-    const v = e.target.value/100;
+    const v = e.target.value / 100;
     audio.volume = v;
-    volumeValue.textContent = `${Math.round(v*100)}%`;
+    volumeValue.textContent = `${Math.round(v * 100)}%`;
     localStorage.setItem('player_volume', v.toString());
     updateMuteButton();
 });
 
 muteBtn?.addEventListener('click', () => {
-    if(audio.volume === 0) {
-        const restored = parseFloat(localStorage.getItem('player_volume')||'1');
+    if (audio.volume === 0) {
+        const restored = parseFloat(localStorage.getItem('player_volume') || '1');
         audio.volume = restored;
     } else {
         localStorage.setItem('player_volume', audio.volume.toString());
@@ -101,26 +101,26 @@ searchBar?.addEventListener('input', e => {
 // Renderizar canciones
 function renderSongs(list) {
     songs = list;
-    if(!listEl) return;
+    if (!listEl) return;
 
     listEl.innerHTML = "";
-    if(songs.length === 0) {
+    if (songs.length === 0) {
         listEl.innerHTML = '<p style="color:gray">No se encontraron canciones.</p>';
         return;
     }
 
-    songs.forEach((song, idx)=>{
+    songs.forEach((song, idx) => {
         const card = document.createElement("div");
-        card.className="song-card";
-        if(song.nombre){
-          card.innerHTML = `
+        card.className = "song-card";
+        if (song.nombre) {
+            card.innerHTML = `
               <img width="60px" src="${song.urlPortada}">
-              <h3>${escapeHtml(song.nombre)||'Sin título'}</h3>
-              <p>${escapeHtml(song.genero)||''}</p>
+              <h3>${escapeHtml(song.nombre) || 'Sin título'}</h3>
+              <p>${escapeHtml(song.genero) || ''}</p>
           `;
 
-          card.onclick = ()=>playIndex(idx);
-          listEl.appendChild(card);
+            card.onclick = () => playIndex(idx);
+            listEl.appendChild(card);
         }
     });
 }
@@ -139,7 +139,7 @@ async function loadSongs() {
 
         logResponse(response);
 
-        if(!response.ok) {
+        if (!response.ok) {
             const text = await response.text();
             console.error("Error al obtener canciones:", text);
             listEl.innerHTML = '<p style="color:red">Error al cargar canciones.</p>';
@@ -150,7 +150,7 @@ async function loadSongs() {
         console.log("Canciones recibidas:", allSongs);
         renderSongs(allSongs);
 
-    } catch(err) {
+    } catch (err) {
         console.error("Fetch falló:", err);
         listEl.innerHTML = '<p style="color:red">Error al cargar canciones.</p>';
     }
@@ -159,7 +159,7 @@ async function loadSongs() {
 // Reproducción
 async function playIndex(idx) {
     console.log("Intentando reproducir índice:", idx);
-    if(idx<0 || idx>=songs.length) return;
+    if (idx < 0 || idx >= songs.length) return;
 
     const song = songs[idx];
     currentIndex = idx;
@@ -170,15 +170,15 @@ async function playIndex(idx) {
     cover.src = song.urlPortada || defaultCover();
     playerSection.hidden = false;
 
-    if(currentObjectURL) {
+    if (currentObjectURL) {
         URL.revokeObjectURL(currentObjectURL);
-        currentObjectURL=null;
+        currentObjectURL = null;
     }
 
     try {
-        playerStatus.textContent='Descargando audio…';
+        playerStatus.textContent = 'Descargando audio…';
         const id = song.idCancion ?? song.id;
-        if(id == null) throw new Error("ID de canción no encontrado");
+        if (id == null) throw new Error("ID de canción no encontrado");
 
         const res = await fetch(`${API_URL}/songs/${id}/stream`, {
             credentials: "include",
@@ -187,7 +187,7 @@ async function playIndex(idx) {
 
         logResponse(res);
 
-        if(!res.ok) throw new Error(`Error en stream: ${res.status}`);
+        if (!res.ok) throw new Error(`Error en stream: ${res.status}`);
 
         const blob = await res.blob();
         currentObjectURL = URL.createObjectURL(blob);
@@ -195,17 +195,17 @@ async function playIndex(idx) {
         audio.src = currentObjectURL;
         audio.play();
 
-        playerStatus.textContent='Reproduciendo';
+        playerStatus.textContent = 'Reproduciendo';
 
-    } catch(err) {
+    } catch (err) {
         console.error("Error al reproducir canción:", err);
-        playerStatus.textContent='No se pudo reproducir la canción.';
+        playerStatus.textContent = 'No se pudo reproducir la canción.';
     }
 }
 
 // Descargar
 async function downloadCurrentSong() {
-    if(currentIndex<0) return;
+    if (currentIndex < 0) return;
 
     const song = songs[currentIndex];
     const id = song.idCancion ?? song.id;
@@ -220,7 +220,7 @@ async function downloadCurrentSong() {
 
         logResponse(res);
 
-        if(!res.ok) throw new Error('Error al descargar: ' + res.status);
+        if (!res.ok) throw new Error('Error al descargar: ' + res.status);
 
         const blob = await res.blob();
         const a = document.createElement('a');
@@ -228,9 +228,9 @@ async function downloadCurrentSong() {
         a.download = song.nombre || 'cancion.mp3';
         a.click();
 
-    } catch(err) {
+    } catch (err) {
         console.error("Error al descargar canción:", err);
-        playerStatus.textContent='Error al descargar.';
+        playerStatus.textContent = 'Error al descargar.';
     }
 }
 
@@ -241,21 +241,21 @@ function updateControls() {
 }
 
 function updateMuteButton() {
-    if(audio.volume === 0) {
-        muteBtn.textContent='🔈';
+    if (audio.volume === 0) {
+        muteBtn.textContent = '🔈';
     } else {
-        muteBtn.textContent='🔊';
+        muteBtn.textContent = '🔊';
     }
 }
 
-function escapeHtml(s){
-    return !s ? '' : s.toString().replace(/&/g,'&')
-        .replace(/</g,'<').replace(/>/g,'>');
+function escapeHtml(s) {
+    return !s ? '' : s.toString().replace(/&/g, '&')
+        .replace(/</g, '<').replace(/>/g, '>');
 }
 
-function clamp(v,a,b){
-    if(Number.isNaN(v)) return a;
-    return Math.min(b,Math.max(a,v));
+function clamp(v, a, b) {
+    if (Number.isNaN(v)) return a;
+    return Math.min(b, Math.max(a, v));
 }
 
 // Iniciar

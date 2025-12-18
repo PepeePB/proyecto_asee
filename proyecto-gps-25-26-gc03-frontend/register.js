@@ -28,7 +28,7 @@ if (registerForm) {
 
         try {
             // Ajusta el puerto/ruta según tu configuración de backend o proxy
-            const response = await fetch('http://localhost:3000/proxy/access/register', {
+            const response = await fetch('http://3.236.45.145:3000/proxy/access/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

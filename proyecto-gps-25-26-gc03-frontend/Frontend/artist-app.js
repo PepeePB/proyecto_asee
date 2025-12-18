@@ -1,4 +1,4 @@
-const API_ARTIST_URL = 'http://localhost:3000/api/artists';
+const API_ARTIST_URL = 'http://3.236.45.145:3000/api/artists';
 
 // ENUMS definidos en JSON Usuarios.txt
 const GENRE_TYPES = [
@@ -70,7 +70,7 @@ function addSocialRow(type = "INSTAGRAM", link = "") {
         const opt = document.createElement('option');
         opt.value = t;
         opt.textContent = t;
-        if(t === type) opt.selected = true;
+        if (t === type) opt.selected = true;
         select.appendChild(opt);
     });
 
@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('username').value = data.username || '';
         document.getElementById('artisticName').value = data.artisticName || '';
         document.getElementById('description').value = data.description || '';
-        if(data.iban) document.getElementById('iban').value = data.iban;
-        if(data.accountPropietary) document.getElementById('accountPropietary').value = data.accountPropietary;
+        if (data.iban) document.getElementById('iban').value = data.iban;
+        if (data.accountPropietary) document.getElementById('accountPropietary').value = data.accountPropietary;
 
         // Cargar GÉNEROS (Seleccionar opciones en el select multiple)
         if (data.genres && Array.isArray(data.genres)) {

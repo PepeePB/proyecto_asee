@@ -14,7 +14,7 @@ loginBtn?.addEventListener('click', async () => {
     }
 
     try {
-        const res = await fetch('http://localhost:3000/proxy/access/login', {
+        const res = await fetch('http://3.236.45.145:3000/proxy/access/login', {
             method: 'POST',
             credentials: "include",     // 👈 OBLIGATORIO PARA COOKIES
             headers: {
@@ -54,7 +54,7 @@ loginBtn?.addEventListener('click', async () => {
 
 async function checkSession() {
     try {
-        const res = await fetch('http://localhost:8080/api/verified', {
+        const res = await fetch('http://3.236.45.145:8080/api/verified', {
             method: 'POST',
             credentials: 'include'
         });
@@ -85,7 +85,7 @@ async function loadProfileButton() {
     if (!userId || !profileBtn) return;
 
     try {
-        const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+        const response = await fetch(`http://3.236.45.145:8080/api/users/${userId}`, {
             method: 'GET',
             credentials: 'include'
         });

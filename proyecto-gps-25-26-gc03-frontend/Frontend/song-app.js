@@ -1,5 +1,5 @@
 // CONFIGURACIÓN: API Gateway (Microservicio de Contenido)
-const API_BASE_URL = 'http://localhost:8080'; // Apunta directo al Gateway
+const API_BASE_URL = 'http://3.236.45.145:8080'; // Apunta directo al Gateway
 
 // Enum de Géneros (Copia exacta de Genre.java)
 const GENRE_TYPES = [

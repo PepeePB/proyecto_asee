@@ -1,5 +1,5 @@
 // CONFIGURACIÓN: apunta a tu proxy de canciones
-const API_URL = 'http://localhost:8080/api/users'; // GET y PUT /songs/{id}
+const API_URL = 'http://3.236.45.145:8080/api/users'; // GET y PUT /songs/{id}
 
 // Elementos
 const form = document.getElementById('profileForm');
@@ -125,7 +125,7 @@ if (form) {
         console.log('[form] Datos a enviar:', updatedData);
 
         try {
-            const response = await fetch(`http://localhost:3000/proxy/api/users/${userId}`, {
+            const response = await fetch(`http://3.236.45.145:3000/proxy/api/users/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

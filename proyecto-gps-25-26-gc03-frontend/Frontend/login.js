@@ -6,7 +6,7 @@ const loginStatus = document.getElementById('login-status');
 loginBtn?.addEventListener('click', async () => {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-    if(!username || !password) {
+    if (!username || !password) {
         loginStatus.textContent = 'Completa usuario y contraseña';
         return;
     }
@@ -14,8 +14,8 @@ loginBtn?.addEventListener('click', async () => {
     try {
         // Petición al API Gateway de login
         console.log(JSON.stringify({ username, password }));
-        
-        const res = await fetch('http://localhost:3000/api/access/login', {
+
+        const res = await fetch('http://3.236.45.145:3000/api/access/login', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
             headers: {
@@ -25,7 +25,7 @@ loginBtn?.addEventListener('click', async () => {
         });
 
         console.log(res.value);
-        
+
         //if(!(res.value < )) throw new Error('Credenciales incorrectas');
 
         const data = await res.json();
@@ -38,7 +38,7 @@ loginBtn?.addEventListener('click', async () => {
 
         // Cargar canciones
         loadSongs(); // función del app.js
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         loginStatus.textContent = 'Error en login';
     }

@@ -1,5 +1,5 @@
 // CONFIGURACIÓN: Apunta a tu proxy (server.js)
-const API_URL = 'http://localhost:3000/api/users';
+const API_URL = 'http://3.236.45.145:3000/api/users';
 
 const form = document.getElementById('profileForm');
 const messageBox = document.getElementById('messageBox');
