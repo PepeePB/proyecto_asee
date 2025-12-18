@@ -1,4 +1,4 @@
-const API_URL = "http://3.236.45.145:8080";
+const API_URL = "http://18.205.26.84:8080";
 
 let songs = [];
 let allSongs = [];
@@ -28,7 +28,7 @@ const logoutBtn = document.getElementById('logout-btn');
 
 logoutBtn?.addEventListener('click', async () => {
     try {
-        await fetch('http://3.236.45.145:3000/proxy/access/logout', {
+        await fetch('http://18.205.26.84:3000/proxy/access/logout', {
             method: 'POST',
             credentials: 'include'
         });

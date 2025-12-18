@@ -1,5 +1,5 @@
 // CONFIGURACIÓN: API Gateway
-const API_BASE_URL = 'http://3.236.45.145:8080';
+const API_BASE_URL = 'http://18.205.26.84:8080';
 
 // Enum de Géneros (Idéntico al definido en SongDTO.java y Swagger)
 //  Ver enum en SongDTO.java
@@ -87,7 +87,7 @@ if (form) {
             console.log("Enviando Payload:", JSON.stringify(songDTO));
 
             // Petición POST al Endpoint /songs definido en Swagger [cite: 2]
-            const response = await fetch(`http://3.236.45.145:3000/proxy/songs`, {
+            const response = await fetch(`http://18.205.26.84:3000/proxy/songs`, {
                 method: 'POST',
                 // 'include' es vital para enviar la cookie JSESSIONID o idUsuario al backend
                 credentials: 'include',

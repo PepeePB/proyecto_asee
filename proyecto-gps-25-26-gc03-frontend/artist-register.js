@@ -51,7 +51,7 @@ if (artistForm) {
 
         try {
             // URL: /api/artists/create-form/{userId}
-            const response = await fetch(`http://3.236.45.145:3000/proxy/api/artists/create-form/${userId}`, {
+            const response = await fetch(`http://18.205.26.84:3000/proxy/api/artists/create-form/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

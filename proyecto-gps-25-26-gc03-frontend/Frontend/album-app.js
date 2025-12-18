@@ -1,5 +1,5 @@
 // CONFIGURACIÓN: API Gateway
-const API_BASE_URL = 'http://3.236.45.145:8080';
+const API_BASE_URL = 'http://18.205.26.84:8080';
 
 // Enum de Géneros (Misma lista para consistencia)
 const GENRE_TYPES = [

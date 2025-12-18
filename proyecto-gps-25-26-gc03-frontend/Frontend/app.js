@@ -1,4 +1,4 @@
-const API_URL = "http://3.236.45.145:3000/api";
+const API_URL = "http://18.205.26.84:3000/api";
 
 let songs = [];
 let allSongs = [];
