@@ -34,7 +34,7 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "http://18.235.28.236:4200");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Range,Accept");
 
     if (req.method === "OPTIONS") {
         return res.sendStatus(200);
@@ -114,25 +114,20 @@ app.use('/api', async (req, res, next) => {
 });
 
 // ---------- PROXY GENERAL ----------
+// ---------- PROXY GENERAL (CORREGIDO PARA IMÁGENES Y AUDIO) ----------
 app.all(/^\/proxy\/.*/, async (req, res) => {
     const apiUrl = BACKEND_BASE + req.url.replace(/^\/proxy/, '');
-
-    // 🔥 Ahora sí extraemos el token real (solo de cookie)
     const token = extractToken(req);
 
     try {
-        // Construcción de headers
         const headers = {};
-        if (req.headers['content-type']) {
-            headers['Content-Type'] = req.headers['content-type'];
-        }
-        if (token) {
-            console.log(`TOKEN ENVIADO: ${token}`)
-            console.log(`TOKEN ENVIADO: ${token}`)
-            headers['Authorization'] = `Bearer ${token}`;
-        }
+        // Reenviar Content-Type original
+        if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
+        // Reenviar Range (CRÍTICO para audio)
+        if (req.headers['range']) headers['Range'] = req.headers['range'];
 
-        // Body solo para métodos que aceptan body
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         let body;
         if (!['GET', 'HEAD'].includes(req.method) && req.body && Object.keys(req.body).length > 0) {
             body = headers['Content-Type']?.includes('application/json')
@@ -146,29 +141,22 @@ app.all(/^\/proxy\/.*/, async (req, res) => {
             ...(body ? { body } : {})
         });
 
-        // Caso especial: login
-        if (req.method === 'POST' && req.path === '/access/login') {
-            forwardSetCookieHeaders(backendResponse, res);
-
-            const ct = backendResponse.headers.get('content-type') || 'application/json';
-            const payload = ct.includes('application/json')
-                ? await backendResponse.json()
-                : await backendResponse.text();
-
-            res.setHeader('Content-Type', ct);
-            return res.status(backendResponse.status).send(payload);
-        }
-
-        // Otras rutas → reenviar cookies si existen
+        // Reenviar cookies (Login)
         forwardSetCookieHeaders(backendResponse, res);
 
-        const contentType = backendResponse.headers.get('content-type') || 'text/plain';
-        const responseData = contentType.includes('application/json')
-            ? await backendResponse.json()
-            : await backendResponse.text();
+        // Configurar respuesta
+        res.status(backendResponse.status);
 
-        res.setHeader('Content-Type', contentType);
-        res.status(backendResponse.status).send(responseData);
+        // Copiar headers de respuesta importantes del backend al frontend
+        const responseHeaders = ['content-type', 'content-length', 'accept-ranges', 'content-range'];
+        responseHeaders.forEach(h => {
+            const val = backendResponse.headers.get(h);
+            if (val) res.setHeader(h, val);
+        });
+
+        // 🔥 LA SOLUCIÓN: Usar arrayBuffer para no romper imágenes ni audio
+        const data = await backendResponse.arrayBuffer();
+        res.send(Buffer.from(data));
 
     } catch (err) {
         console.error("Proxy error:", err);

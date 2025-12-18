@@ -1,4 +1,4 @@
-const API_URL = "http://18.235.28.236:8080";
+const API_URL = "http://18.235.28.236:3000/proxy";
 
 let songs = [];
 let allSongs = [];
