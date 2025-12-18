@@ -1,0 +1,232 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. INFRAESTRUCTURA BASE
+  # ==========================================
+  
+  # Base de Datos MySQL
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: alumno
+      MYSQL_DATABASE: MusicFly
+      MYSQL_USER: alumno
+      MYSQL_PASSWORD: alumno
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - MusicFlyNetwork
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Caché y Sesiones)
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    command: ["redis-server", "--requirepass", "alumno"]  # Establecer la contraseña para Redis
+    ports:
+      - "6379:6379"
+    networks:
+      - MusicFlyNetwork
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "alumno", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Kafka (Modo KRaft - Sin Zookeeper) (Mensajería)
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka_container
+    ports:
+      - "9092:9092"
+    environment:
+      # ID del nodo (Obligatorio en KRaft)
+      KAFKA_NODE_ID: 1
+      # Roles: Actúa como broker (guarda mensajes) y controller (gestiona el cluster)
+      KAFKA_PROCESS_ROLES: broker,controller
+      # Definimos los listeners (puertos de escucha)
+      # INTERNAL: Para tus microservicios dentro de Docker (puerto 29092)
+      # EXTERNAL: Para tu PC/Host (puerto 9092)
+      # CONTROLLER: Para gestión interna (puerto 9093)
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      # Le decimos cómo anunciarse al mundo
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka_container:29092,EXTERNAL://localhost:9092
+      # Mapeo de seguridad (todos texto plano para desarrollo)
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # Nombre del listener para comunicación interna entre brokers
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Nombre del listener para el controlador
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Votantes del Quorum (se vota a sí mismo porque es nodo único)
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka_container:9093
+      # Configuraciones extra que tenías
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    networks:
+      - MusicFlyNetwork
+
+
+# Proxy Node.js (Puerto 3000)
+  frontend-proxy:
+    build:
+      context: ./proyecto-gps-25-26-gc03-frontend
+      dockerfile: Dockerfile-proxy
+    container_name: frontend-proxy_container
+    ports:
+      - "3000:3000" # Exponemos el 3000 para que tu navegador llegue a él
+    environment:
+      # IMPORTANTE: Dentro de Docker, el gateway no es 'localhost', es 'api-gateway'
+      - BACKEND_URL=http://api-gateway:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - MusicFlyNetwork
+
+
+  # ==========================================
+  # 2. MICROSERVICIOS 
+  # ==========================================
+
+  # Eureka Server (Discovery Service)
+  eureka-server:
+    build: ./proyecto-asee-25-26-gb03-eureka-microservice  
+    container_name: eureka-server_container
+    ports:
+      - "8761:8761"
+    networks:
+      - MusicFlyNetwork
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Microservicio de Usuarios (Gradle - Puerto 8082)
+  users-microservice:
+    build: ./proyecto-gps-25-26-gc03-microservice-users
+    container_name: users-microservice_container
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      # Sobrescribimos localhost por el nombre del contenedor 'mysql_container'
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_container:3306/MusicFly?allowPublicKeyRetrieval=true&useSSL=false
+      # Sobrescribimos localhost por el nombre del contenedor 'redis_container'
+      - SPRING_DATA_REDIS_HOST=redis_container
+      # Sobrescribimos variables personalizadas
+      - APP_PREFIX_DOMAIN=api-gateway
+      - EUREKA_HOST=eureka-server
+      
+      # --- CONFIGURACIÓN DE CORREO (OAUTH2) ---
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH_MECHANISMS=XOAUTH2
+      
+      # --- CREDENCIALES OAUTH2 DE GMAIL ---
+      # Spring Boot mapea GMAIL_CLIENT_ID -> gmail.client-id
+      - GMAIL_CLIENT_ID=499577998343-3fkc1iaedib757ue5o8cjp2npkkrvqp9.apps.googleusercontent.com
+      - GMAIL_CLIENT_SECRET=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
+      - GMAIL_REFRESH_TOKEN=1//03qk9b4ZrSqtxCgYIARAAGAMSNwF-L9IrN7-wtmih9nxowJG1hWIFI-5vnehcfVz3i62utkQiLIm17zS7bA-kCZiaji9DT6JVqc8
+      - GMAIL_EMAIL=undersounds2025@gmail.com
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - MusicFlyNetwork
+
+  # Microservicio de Contenido (Maven - Puerto 8001)
+  content-microservice:
+    build: ./proyecto-gps-25-26-gc03-content-microservice
+    container_name: content-microservice_container
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_container:3306/MusicFly?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka_container:29092
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - MusicFlyNetwork
+
+  # Microservicio de Estadísticas (Maven - Puerto 8083)
+  statistics-microservice:
+    build: ./proyecto-gps-25-26-gc03-statistics-microservice
+    container_name: statistics-microservice_container
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_container:3306/MusicFly?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka_container:29092
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - MusicFlyNetwork
+
+  # ==========================================
+  # 3. GATEWAY Y FRONTEND
+  # ==========================================
+
+  # API Gateway (Puerto 8080)
+  api-gateway:
+    build: ./proyecto-asee-25-26-gb03-api-gateway-microservice
+    container_name: api-gateway_container
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      users-microservice:
+        condition: service_started
+      content-microservice:   
+        condition: service_started
+      statistics-microservice: 
+        condition: service_started
+    networks:
+      - MusicFlyNetwork
+
+  # Frontend (Nginx - Puerto Local 4200)
+  frontend:
+    build: ./proyecto-gps-25-26-gc03-frontend
+    container_name: frontend_container
+    ports:
+      - "4200:80" # Aquí está la magia: Entras por 4200, Docker lo manda al 80 interno
+    depends_on:
+      - api-gateway
+    networks:
+      - MusicFlyNetwork
+
+# Red compartida para que todos se vean por nombre
+networks:
+  MusicFlyNetwork:
+    driver: bridge
+
+# Volumen para no perder datos de MySQL al reiniciar
+volumes:
+  mysql_data:
